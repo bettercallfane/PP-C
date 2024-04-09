@@ -1,0 +1,289 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Define maximum values for various entities
+#define MAX_PRODUCTS 100
+#define MAX_ORDERS 100
+#define MAX_PERSONS 100
+#define MAX_NAME_LENGTH 50
+#define MAX_ORDER_PRODUCTS 10
+
+// Structure definitions
+typedef struct {
+    char name[MAX_NAME_LENGTH];
+    int quantity;
+    float price;
+} Product;
+
+typedef struct {
+    int code;
+    char productName[MAX_NAME_LENGTH];
+    int quantity;
+} OrderProduct;
+
+typedef struct {
+    int code;
+    OrderProduct products[MAX_ORDER_PRODUCTS];
+    float amountPaid;
+} Order;
+
+typedef struct {
+    char name[MAX_NAME_LENGTH];
+    char surname[MAX_NAME_LENGTH];
+    Order orders[MAX_ORDERS];
+    int orderCount;
+} Person;
+
+// Global arrays to store data
+Product products[MAX_PRODUCTS];
+Person persons[MAX_PERSONS];
+int productCount = 0;
+int personCount = 0;
+
+// Function prototypes
+void login(char name[], char surname[]);
+void placeOrder();
+void sellProducts();
+void viewPlacedOrders();
+void searchProducts();
+
+int main() {
+    char choice;
+
+    // Adding sample products to the inventory
+    strcpy(products[productCount].name, "Laptop");
+    products[productCount].quantity = 10;
+    products[productCount].price = 800.00;
+    productCount++;
+
+    strcpy(products[productCount].name, "Galaxy S23 Ultra Phone");
+    products[productCount].quantity = 20;
+    products[productCount].price = 1500.00;
+    productCount++;
+
+    strcpy(products[productCount].name, "IPhone");
+    products[productCount].quantity = 20;
+    products[productCount].price = 1500.00;
+    productCount++;
+
+    strcpy(products[productCount].name, "Tablet");
+    products[productCount].quantity = 15;
+    products[productCount].price = 300.00;
+    productCount++;
+
+    strcpy(products[productCount].name, "Food");
+    products[productCount].quantity = 10;
+    products[productCount].price = 100.00;
+    productCount++;
+
+    strcpy(products[productCount].name, "Toys");
+    products[productCount].quantity = 10;
+    products[productCount].price = 120.00;
+    productCount++;
+
+    strcpy(products[productCount].name, "Clothing");
+    products[productCount].quantity = 10;
+    products[productCount].price = 200.00;
+    productCount++;
+
+    while (1) {
+        printf("\nMenu:\n");
+        printf("1. Login\n");
+        printf("2. Place Order\n");
+        printf("3. Sell Products to Store\n");
+        printf("4. View Placed Orders\n");
+        printf("5. Search Products\n");
+        printf("6. Exit\n");
+
+        printf("Enter your choice: ");
+        scanf(" %c", &choice);
+
+        switch (choice) {
+            case '1':
+            {
+                char name[MAX_NAME_LENGTH], surname[MAX_NAME_LENGTH];
+                printf("Enter your name and surname: ");
+                scanf("%s %s", name, surname);
+                login(name, surname);
+                break;
+            }
+            case '2':
+                placeOrder();
+                break;
+            case '3':
+                sellProducts();
+                break;
+            case '4':
+                viewPlacedOrders();
+                break;
+            case '5':
+                searchProducts();
+                break;
+            case '6':
+                printf("Exiting...\n");
+                exit(0);
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    }
+
+    return 0;
+}
+
+void login(char name[], char surname[]) {
+    // Search for person based on name and surname
+    for (int i = 0; i < personCount; i++) {
+        if (strcmp(persons[i].name, name) == 0 && strcmp(persons[i].surname, surname) == 0) {
+            printf("Welcome, %s %s!\n", name, surname);
+            // Additional logic to gather orders placed by the person can be added here
+            return;
+        }
+    }
+    // If person not found, create a new person entry
+    strcpy(persons[personCount].name, name);
+    strcpy(persons[personCount].surname, surname);
+    persons[personCount].orderCount = 0;
+    printf("Welcome, %s %s!\n", name, surname);
+    personCount++;
+}
+
+void placeOrder() {
+    // Implementation of place order functionality
+    int personIndex;
+    char productName[MAX_NAME_LENGTH];
+    int quantity;
+    float totalAmount = 0;
+
+    // Find the person's index in the persons array
+    printf("Enter your name and surname: ");
+    char name[MAX_NAME_LENGTH], surname[MAX_NAME_LENGTH];
+    scanf("%s %s", name, surname);
+
+    for (personIndex = 0; personIndex < personCount; personIndex++) {
+        if (strcmp(persons[personIndex].name, name) == 0 && strcmp(persons[personIndex].surname, surname) == 0) {
+            break;
+        }
+    }
+
+    // If person not found, return
+    if (personIndex == personCount) {
+        printf("Person not found. Please login first.\n");
+        return;
+    }
+
+    // Display available products
+    printf("Available Products:\n");
+    for (int i = 0; i < productCount; i++) {
+        printf("%d. %s - $%.2f\n", i + 1, products[i].name, products[i].price);
+    }
+
+    // Enter order details
+    printf("Enter product name and quantity (0 to finish): \n");
+    while (1) {
+        scanf("%s", productName);
+        if (strcmp(productName, "0") == 0)
+            break;
+        scanf("%d", &quantity);
+
+        // Find the product in the products array
+        int productIndex;
+        for (productIndex = 0; productIndex < productCount; productIndex++) {
+            if (strcmp(products[productIndex].name, productName) == 0) {
+                break;
+            }
+        }
+
+        // If product not found, return
+        if (productIndex == productCount) {
+            printf("Product not found.\n");
+            continue;
+        }
+
+        // Check if enough quantity is available
+        if (products[productIndex].quantity < quantity) {
+            printf("Not enough quantity available for %s.\n", productName);
+            continue;
+        }
+
+        // Update total amount and decrease product quantity
+        totalAmount += products[productIndex].price * quantity;
+        products[productIndex].quantity -= quantity;
+
+        // Add product to order
+        OrderProduct orderProduct;
+        orderProduct.code = products[productIndex].quantity;
+        strcpy(orderProduct.productName, productName);
+        orderProduct.quantity = quantity;
+        persons[personIndex].orders[persons[personIndex].orderCount].products[persons[personIndex].orders[persons[personIndex].orderCount].code] = orderProduct;
+        persons[personIndex].orders[persons[personIndex].orderCount].code++;
+    }
+
+    // Update order count and display total amount
+    persons[personIndex].orderCount++;
+    printf("Total amount to pay: $%.2f\n", totalAmount);
+}
+
+void sellProducts() {
+    // Implementation of sell products functionality
+    printf("Enter product name, quantity, and price to sell: ");
+    char productName[MAX_NAME_LENGTH];
+    int quantity;
+    float price;
+
+    scanf("%s %d %f", productName, &quantity, &price);
+
+    // Add the product to the inventory
+    strcpy(products[productCount].name, productName);
+    products[productCount].quantity = quantity;
+    products[productCount].price = price;
+    productCount++;
+
+    printf("Product added to inventory.\n");
+}
+
+void viewPlacedOrders() {
+    // Implementation of view placed orders functionality
+    printf("Enter your name and surname: ");
+    char name[MAX_NAME_LENGTH], surname[MAX_NAME_LENGTH];
+    scanf("%s %s", name, surname);
+
+    // Find the person's index in the persons array
+    int personIndex;
+    for (personIndex = 0; personIndex < personCount; personIndex++) {
+        if (strcmp(persons[personIndex].name, name) == 0 && strcmp(persons[personIndex].surname, surname) == 0) {
+            break;
+        }
+    }
+
+    // If person not found, return
+    if (personIndex == personCount) {
+        printf("Person not found. Please login first.\n");
+        return;
+    }
+
+    // Print orders for the person
+    printf("Placed Orders:\n");
+    for (int i = 0; i < persons[personIndex].orderCount; i++) {
+        printf("Order %d:\n", i + 1);
+        for (int j = 0; j < persons[personIndex].orders[i].code; j++) {
+            printf("%s - %d\n", persons[personIndex].orders[i].products[j].productName, persons[personIndex].orders[i].products[j].quantity);
+        }
+        printf("Amount Paid: $%.2f\n", persons[personIndex].orders[i].amountPaid);
+    }
+}
+
+void searchProducts() {
+    // Implementation of search products functionality
+    printf("Enter search query (product name or price range): ");
+    char query[MAX_NAME_LENGTH];
+    scanf("%s", query);
+
+    // Search by product name
+    printf("Search Results:\n");
+    for (int i = 0; i < productCount; i++) {
+        if (strstr(products[i].name, query) != NULL || atof(query) == products[i].price) {
+            printf("%s - $%.2f\n", products[i].name, products[i].price);
+        }
+    }
+}
